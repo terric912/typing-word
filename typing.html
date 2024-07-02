@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title></title>
+	<script>
+		var words;
+		function loadWords(jsonfile) {
+			fetch(jsonfile).then(response => response.json())
+				.then(data => {
+					words = data.map(item => {
+						return {tc:item.tc, en:item.en};
+					});
+				}).catch(error => {
+					console.error('Error loading the JSON file:', error);
+				});
+		}
+	</script>	
+</head>
+<body>
+	<button onclick="loadWords('data/sample.json');">Sample</button>
+</body>
+</html>
