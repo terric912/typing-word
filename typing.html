@@ -1,22 +1,149 @@
 <!DOCTYPE html>
-<html>
+<html lang="zh-hant-tw">
 <head>
-	<title></title>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<meta name="Author" content="Terric Chen, terric_AT_gmail_com">
+	<title>英打遊戲</title>
+	<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+	<style>
+		body {
+			font-family: Consolas, Verdana, Arial, sans-serif;
+		}
+		#board {
+			position: relative;
+		}
+		#status {
+			font-size: 2rem;
+			display: none;
+		}
+		.word {
+			position: absolute;
+			background-color: salmon;
+			padding: 0px 10px;
+			margin: 5px;
+		}
+	</style>
+</head>
+<body onload="loadWords();" onresize="calcBH();">
+	<div class="card vh-100">
+		<div class="card-header"><div class="row">
+			<div class="col-8 col-sm-6 col-md-4 col-xl-2">
+			<select class="form-select mb-2" onchange="changeWords(this.value);">
+				<option value="0" selected disabled>請選擇題庫：</option>
+				<option value="j1">國中基本單字(1229)</option>
+				<option value="j2">國中進階單字(779)</option>
+				<option value="s0">高中英單不分級(135)</option>
+				<option value="s1">高中英單第一級(1047)</option>
+				<option value="s2">高中英單第二級(1039)</option>
+				<option value="s3">高中英單第三級(1018)</option>
+				<option value="s4">高中英單第四級(1022)</option>
+				<option value="s5">高中英單第五級(1006)</option>
+				<option value="s6">高中英單第六級(1030)</option>
+			</select></div>
+			<div class="col-12 col-md-8 col-lg-5">
+				<button class="bTime btn btn-outline-primary" onclick="gameStart(60);">1分鐘</button>
+				<button class="bTime btn btn-outline-info" onclick="gameStart(180);">3分鐘</button>
+				<button class="bTime btn btn-outline-success" onclick="gameStart(300);">5分鐘</button>
+				<button class="bTime btn btn-outline-warning" onclick="gameStart(600);">10分鐘</button>
+				<button class="bTime btn btn-outline-danger" onclick="gameStart(0);">不限時</button>
+				<span id="status"><span id="time">Time:0</span> Score:<span id="score">0</span></span>
+			</div>
+		</div></div>
+		<div id="board" class="card-body bg-primary-subtle"></div>
+		<div class="card-footer text-body-secondary"><div class="row">
+			<div class="col-12 col-sm-9 col-md-6">
+				<input type="text" id="input" class="form-control form-control-lg" placeholder="在此輸入，按Enter送出" onchange="mykey(this);">
+			</div>
+		</div></div>
+	</div>
+
+	<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+	<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 	<script>
-		var words;
-		function loadWords(jsonfile) {
-			fetch(jsonfile).then(response => response.json())
+		var _bh,_bw,gameTime=0,gameScore=0;
+		function get(id) { return document.getElementById(id); }
+		function gets(qs) { return Array.from(document.querySelectorAll(qs)); }
+		function getRnd(min,max) { return Math.floor(Math.random()*(max-min+1))+min; }
+		function calcBH() { 
+			var _css=getComputedStyle(get("board"));
+			_bw=parseFloat(_css["width"]);
+			_bh=parseFloat(_css["height"]);
+		}
+		function mykey(k) {
+			gets(".word").filter(function(o) { 
+				return k.value.trim()==o.innerHTML;
+			}).forEach(function(o) {
+				get("score").innerHTML=(++gameScore);
+				o.innerHTML=o.word.tc;
+				o.style.background="transparent";
+				setTimeout(remove,3000,o);
+			});
+			k.value="";
+		}
+		function remove(x) {
+			clearInterval(x.tmr);
+			x.remove();
+		}
+		function falling(o) {
+			o.y++;
+			o.style.left=o.x+"px";
+			o.style.top=o.y+"px";
+			if(o.y+o.h >= _bh) remove(o);
+		}
+		function createWord() {
+			var x = document.createElement("div");
+			x.className="word";
+			x.word=word.at(getRnd(0,word.length-1));
+			x.innerHTML=x.word.en;
+			x.w=x.innerHTML.length * 9 + 20;
+			x.h=26;
+			x.x=getRnd(0, _bw - x.w);
+			x.y=0;
+			x.style.left=x.x+"px";
+			x.style.top=x.y+"px";
+			x.tmr=setInterval(falling,100,x);
+			get("board").append(x);
+		}
+		function gameStart(t) {
+			if(!window.word) {
+				alert("請先選擇題庫！");return;
+			}
+			calcBH();
+			gameScore=0;
+			get("input").focus();
+			$(".bTime").hide();$("#status").show();
+			const game=setInterval(createWord,2000);
+			if(t>0) {
+				gameTime=t;
+				setTimeout(clearInterval,t*1000,setInterval(function(){
+					get("time").innerHTML="Time:"+(--gameTime);
+				},1000));
+				setTimeout(gameStop,t*1000);
+				setTimeout(clearInterval,t*1000,game);
+			} else {
+				//TODO:無限時
+			}
+		}
+		function gameStop() {
+			gets(".word").forEach(function(o){remove(o);});
+			alert("恭喜你得了"+gameScore+"分！");
+			$(".bTime").show();$("#status").hide();
+			//TODO: RANK BOARD
+		}
+		function changeWords(v) {
+			window.word=Array.from(words).filter(function(x){return x.Lv==v;});
+		}
+		function loadWords() {
+			fetch("words.json").then(response => response.json())
 				.then(data => {
-					words = data.map(item => {
-						return {tc:item.tc, en:item.en};
+					window.words = data.map(item => {
+						return {en:item.en,Lv:item.Lv,tc:item.tc};
 					});
 				}).catch(error => {
 					console.error('Error loading the JSON file:', error);
 				});
 		}
-	</script>	
-</head>
-<body>
-	<button onclick="loadWords('data/sample.json');">Sample</button>
+	</script>
 </body>
 </html>
