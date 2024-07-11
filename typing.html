@@ -22,7 +22,7 @@
 		}
 	</style>
 </head>
-<body onload="init();" onresize="calcBH();">
+<body onload="gameInit();" onresize="boardResize();">
 	<div class="card vh-100">
 		<div class="card-header fs-4">
 			Time:<span id="time">0</span>s &emsp;&emsp; Score:<span id="score">0</span>
@@ -37,7 +37,7 @@
 		<div class="card-body bg-primary-subtle" id="board"></div>
 		<div class="card-footer text-body-secondary"><div class="row">
 			<div class="col-12 col-sm-9 col-md-6">
-				<input type="text" id="input" class="form-control form-control-lg" placeholder="在此輸入，按Enter送出" onchange="mykey(this);">
+				<input type="text" id="input" class="form-control form-control-lg" autocapitalize="off" placeholder="在此輸入，按Enter送出" onchange="mykey(this);">
 			</div>
 		</div></div>
 		<div class="toast-container d-flex justify-content-center vh-100 vw-100">
@@ -107,7 +107,12 @@
 		function get(id) { return document.getElementById(id); }
 		function gets(qs) { return Array.from(document.querySelectorAll(qs)); }
 		function getRnd(min,max) { return Math.floor(Math.random()*(max-min+1))+min; }
-		function calcBH() { 
+		function boardResize() {
+			if(window.innerWidth < 768) {
+				get("board").style.flexGrow="0.4";
+			} else {
+				get("board").style.flexGrow="";
+			}
 			var _css=getComputedStyle(get("board"));
 			_bw=parseFloat(_css["width"]);
 			_bh=parseFloat(_css["height"]);
@@ -169,7 +174,6 @@
 			if(gameLv==0) {
 				alert("請先進行遊戲設定！");return;
 			}
-			calcBH();
 			wordCount=0;
 			gameScore=0;
 			gameTime=t;
@@ -229,7 +233,7 @@
 				});
 			gameLv=0;
 		}
-		function init() {
+		function gameInit() {
 			loadWords();
 			get('volBGM').value=0.5;
 			get('bgm').volume=get('volBGM').value;
@@ -242,6 +246,7 @@
 			$("#wordCount").hide();
 			$("#modalRanks").on('show.bs.modal',getRank);
 			$('#modalSettings').modal('show');
+			boardResize();
 		}
 		function getRank() {
 			var LvTitle={"j1":"國中基本單字","j2":"國中進階單字","s0":"高中不分級","s1":"高中第一級","s2":"高中第二級","s3":"高中第三級","s4":"高中第四級","s5":"高中第五級","s6":"高中第六級"};
