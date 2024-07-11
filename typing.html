@@ -31,6 +31,7 @@
 			</span>
 			<div class="d-inline-flex float-end">
 				<button class="btn btn-sm btn-warning mx-1" data-bs-toggle="modal" data-bs-target="#modalSettings"><i class="bi bi-gear"></i></button>
+				<button class="btn btn-sm btn-success mx-1" data-bs-toggle="modal" data-bs-target="#modalRanks"><i class="bi bi-bar-chart"></i></button>
 			</div>
 		</div>
 		<div class="card-body bg-primary-subtle" id="board"></div>
@@ -82,6 +83,19 @@
 					<button class="bTime btn btn-outline-success" data-bs-dismiss="modal" onclick="gameStart(300);">5分鐘</button>
 					<button class="bTime btn btn-outline-warning" data-bs-dismiss="modal" onclick="gameStart(600);">10分鐘</button>
 					<button class="bTime btn btn-outline-danger" data-bs-dismiss="modal" onclick="gameStart(0);">不限時</button>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<div id="modalRanks" class="modal" tabindex="-1">
+		<div class="modal-dialog modal-dialog-centered">
+			<div class="modal-content">
+				<div class="modal-header"><h5 class="modal-title fw-bold">本機排行榜</h5></div>
+				<dl class="modal-body" id="rankboard"></dl>
+				<div class="modal-footer justify-content-between">
+					<button class="btn btn-sm btn-outline-danger" data-bs-dismiss="modal" onclick="clearRank();">清除排行榜</button>
+					<button class="btn btn-sm btn-outline-secondary" data-bs-dismiss="modal">關閉</button>
 				</div>
 			</div>
 		</div>
@@ -191,7 +205,7 @@
 			$(".toast").toast("show");
 			$("#timeBtns").show();
 			$("#btnStop").hide();
-			//TODO: RANK BOARD
+			setRank();
 		}
 		function changeWords(m=0,n=0) {
 			window.word=Array.from(window.words).filter(function(x) {
@@ -226,7 +240,51 @@
 				get("input").focus();
 			});
 			$("#wordCount").hide();
+			$("#modalRanks").on('show.bs.modal',getRank);
 			$('#modalSettings').modal('show');
+		}
+		function getRank() {
+			var LvTitle={"j1":"國中基本單字","j2":"國中進階單字","s0":"高中不分級","s1":"高中第一級","s2":"高中第二級","s3":"高中第三級","s4":"高中第四級","s5":"高中第五級","s6":"高中第六級"};
+			var rank=null;
+			get("rankboard").innerHTML="";
+			if(localStorage.getItem("typing")) {
+				rank=JSON.parse(localStorage.typing);
+				for(var lv of Object.keys(rank).sort()) {
+					var t=document.createElement("dt");
+					t.innerHTML=LvTitle[lv];
+					var o=document.createElement("ol");
+					o.setAttribute("id","ol"+lv);
+					for(var x of rank[lv]) {
+						var y=document.createElement("li");
+						var z=Number(x.score/(x.time/60)).toFixed(1);
+						y.innerHTML=`${z} WPM, ${x.score} in ${x.time} seconds.`;
+						o.appendChild(y);
+					};
+					t.appendChild(o);
+					get("rankboard").appendChild(t);
+				};
+			} else {
+				get("rankboard").innerHTML="等你來挑戰！";
+			}
+		}
+		function setRank() {
+			var rank={};
+			if(localStorage.getItem("typing")) {
+				rank=JSON.parse(localStorage.typing);
+			}
+			if(Object.keys(rank).includes(gameLv)) {
+				rank[gameLv].push({"score":gameScore,"time":gameTime});
+				rank[gameLv].sort(function(a,b) {
+					return (b.score/b.time)-(a.score/a.time);
+				});
+				if(rank[gameLv].length > 5) rank[gameLv].pop();
+			} else {
+				Object.defineProperty(rank, gameLv, {value:[{"score":gameScore,"time":gameTime}],writable:true,enumerable:true,configurable:true});
+			}
+			localStorage.setItem("typing",JSON.stringify(rank));
+		}
+		function clearRank() {
+			localStorage.removeItem("typing");
 		}
 	</script>
 	<audio id="bgm" loop><source src="bgm.mp3" type="audio/mpeg"></audio>
