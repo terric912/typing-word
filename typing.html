@@ -20,6 +20,10 @@
 			padding: 0px 10px;
 			margin: 5px;
 		}
+		mark {
+			background: transparent;
+			color:yellow;
+		}
 	</style>
 </head>
 <body onload="gameInit();" onresize="boardResize();">
@@ -37,7 +41,7 @@
 		<div class="card-body bg-primary-subtle" id="board"></div>
 		<div class="card-footer text-body-secondary"><div class="row">
 			<div class="col-12 col-sm-9 col-md-6">
-				<input type="text" id="input" class="form-control form-control-lg" autocapitalize="off" placeholder="在此輸入，按Enter送出" onchange="mykey(this);">
+				<input type="text" id="input" class="form-control form-control-lg" autocapitalize="off" placeholder="在此輸入，按Enter送出" onchange="mykey(this);" onkeyup="mykeyUp(this);">
 			</div>
 		</div></div>
 		<div class="toast-container d-flex justify-content-center vh-100 vw-100">
@@ -124,9 +128,18 @@
 				get("bgm").pause();
 			} 
 		}
+		function mykeyUp(k) {
+			if(event.key === 'Enter') return;
+			gets("mark").forEach(function(o){o.outerHTML=o.innerHTML;});
+			gets(".word").filter(function(o) {
+				return o.word.en.startsWith(this);
+			}, k.value).forEach(function(o) {
+				o.innerHTML=`<mark>${this}</mark>`+o.word.en.substr(this.length);
+			}, k.value);
+		}
 		function mykey(k) {
 			var match=gets(".word").filter(function(o) { 
-				return k.value.trim()==o.innerHTML;
+				return k.value.trim()==o.innerText;
 			});
 			if(match.length<=0) {
 				if(get("cbSFX").checked) get("sfx_x").play();
