@@ -25,7 +25,10 @@
 <body onload="init();" onresize="calcBH();">
 	<div class="card vh-100">
 		<div class="card-header fs-4">
-			Time:<span id="time">0</span>s &emsp;&emsp; Score:<span id="score">0</span> &emsp;&emsp; Words:<span id="wordcount">0/0</span>
+			Time:<span id="time">0</span>s &emsp;&emsp; Score:<span id="score">0</span>
+			<span id="wordCount"> &emsp;&emsp; Words:<span id="countTotal">0/0</span>
+				<button class="btn btn-sm btn-danger" id="btnStop" onclick="gameStop();"><i class="bi bi-power"></i></button>
+			</span>
 			<div class="d-inline-flex float-end">
 				<button class="btn btn-sm btn-warning mx-1" data-bs-toggle="modal" data-bs-target="#modalSettings"><i class="bi bi-gear"></i></button>
 			</div>
@@ -51,7 +54,7 @@
 			<div class="modal-content">
 				<div class="modal-header"><h5 class="modal-title fw-bold">設定</h5></div>
 				<div class="modal-body">
-					<select class="form-select mb-2" onchange="changeWords(this.value);">
+					<select class="form-select mb-2" onchange="gameLv=this.value;">
 						<option value="0" selected disabled>請選擇題庫：</option>
 						<option value="j1">國中基本單字(1229)</option>
 						<option value="j2">國中進階單字(779)</option>
@@ -87,7 +90,6 @@
 	<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
 	<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 	<script>
-		var _bh,_bw,gameTime=0,gameScore=0,wordTotal=0,wordCount=0;
 		function get(id) { return document.getElementById(id); }
 		function gets(qs) { return Array.from(document.querySelectorAll(qs)); }
 		function getRnd(min,max) { return Math.floor(Math.random()*(max-min+1))+min; }
@@ -143,13 +145,18 @@
 			x.style.top=x.y+"px";
 			x.tmr=setInterval(falling,100,x);
 			get("board").append(x);
-			get("wordcount").innerHTML=`${++wordCount}/${wordTotal}`;
+			get("countTotal").innerHTML=`${++wordCount}/${wordTotal}`;
+			if($("#wordCount").is(":visible") && (wordTotal==wordCount)) {
+				(w.innerHTML.length>12)?changeWords(0,0):(w.innerHTML.length<7)?changeWords(7,12):changeWords(13,18);
+				wordCount=0;
+			}
 		}
 		function gameStart(t) {
-			if(!window.word) {
+			if(gameLv==0) {
 				alert("請先進行遊戲設定！");return;
 			}
 			calcBH();
+			wordCount=0;
 			gameScore=0;
 			gameTime=t;
 			get("score").innerHTML=0;
@@ -158,35 +165,44 @@
 			$("#timeBtns").hide();
 			if(get("cbBGM").checked) get("bgm").play();
 			if(t>0) {
-				setTimeout(clearInterval,1000*t,setInterval(createWord,2000));
-				setTimeout(clearInterval,1000*t,setInterval(()=>{
-					get("time").innerHTML=(--gameTime);
-					if(gameTime<=0) gameStop();
-				},1000));
+				changeWords();
+				$("#wordCount").hide();
+				timeCount=t;
+				gameTimer=setInterval(()=>{
+					get("time").innerHTML=(--timeCount);
+					if(timeCount<=0) gameStop();
+				},1000);
 			} else {
-				setInterval(createWord,2000);
-				setInterval(()=>{
+				changeWords(0,6);
+				$("#btnStop").show();
+				$("#wordCount").show();
+				gameTimer=setInterval(()=>{
 					get("time").innerHTML=(++gameTime);
 				},1000);
 			}
+			wordTimer=setInterval(createWord,2000);
 		}
 		function gameStop() {
+			clearInterval(wordTimer);
+			clearInterval(gameTimer);
 			if(get("cbBGM").checked) get("bgm").pause();
 			gets(".word").forEach(function(o){remove(o);});
 			get("msg").innerHTML=`恭喜你得了 ${gameScore} 分！`;
 			$(".toast").toast("show");
 			$("#timeBtns").show();
+			$("#btnStop").hide();
 			//TODO: RANK BOARD
 		}
-		function changeWords(v,m=0,n=0) {
+		function changeWords(m=0,n=0) {
 			window.word=Array.from(window.words).filter(function(x) {
-				var ret=(x.Lv==v);
+				var ret=(x.Lv==gameLv);
 				if(m>0) ret&&=(x.en.length >= m);
 				if(n>0) ret&&=(x.en.length <= n);
 				return  ret;
 			});
 			window.word.sort(()=>{return 0.5-Math.random();});
 			wordTotal=window.word.length;
+			get("countTotal").innerHTML=`${wordCount}/${wordTotal}`;
 		}
 		function loadWords() {
 			fetch("words.json").then(response => response.json())
@@ -197,6 +213,7 @@
 				}).catch(error => {
 					console.error('Error loading the JSON file:', error);
 				});
+			gameLv=0;
 		}
 		function init() {
 			loadWords();
@@ -208,6 +225,7 @@
 			$(".modal").on('hidden.bs.modal', function() {
 				get("input").focus();
 			});
+			$("#wordCount").hide();
 			$('#modalSettings').modal('show');
 		}
 	</script>
