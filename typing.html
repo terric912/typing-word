@@ -22,7 +22,7 @@
 		}
 	</style>
 </head>
-<body onload="loadWords();" onresize="calcBH();">
+<body onload="init();" onresize="calcBH();">
 	<div class="card vh-100">
 		<div class="card-header fs-4">
 			Time:<span id="time">0</span>s &emsp;&emsp; Score:<span id="score">0</span> &emsp;&emsp; Words:<span id="wordcount">0/0</span>
@@ -36,6 +36,14 @@
 				<input type="text" id="input" class="form-control form-control-lg" placeholder="在此輸入，按Enter送出" onchange="mykey(this);">
 			</div>
 		</div></div>
+		<div class="toast-container d-flex justify-content-center vh-100 vw-100">
+			<div class="toast align-self-center" data-bs-autohide="false">
+				<div class="d-flex">
+					<div class="toast-body fs-4" id="msg"></div>
+					<button type="button" class="btn-close me-2 m-auto" data-bs-dismiss="toast"></button>
+				</div>
+			</div>
+		</div>
 	</div>
 
 	<div id="modalSettings" class="modal" tabindex="-1">
@@ -55,6 +63,15 @@
 						<option value="s5">高中英單第五級(1006)</option>
 						<option value="s6">高中英單第六級(1030)</option>
 					</select>
+					<div class="form-check form-switch form-check-inline">
+						<input class="form-check-input" type="checkbox" id="cbBGM" oninput="toggleBGM(this);" checked>
+						<label class="form-check-label">背景音樂 BGM</label>
+						<input type="range" id="volBGM" min="0" max="1" step="0.05" oninput="get('bgm').volume=this.value;">
+					</div>
+					<div class="form-check form-switch">
+						<input class="form-check-input" type="checkbox" id="cbSFX" checked>
+						<label class="form-check-label">對錯音效 SFX</label>
+					</div>
 				</div>
 				<div class="modal-footer" id="timeBtns">
 					<button class="bTime btn btn-outline-primary" data-bs-dismiss="modal" onclick="gameStart(60);">1分鐘</button>
@@ -79,15 +96,28 @@
 			_bw=parseFloat(_css["width"]);
 			_bh=parseFloat(_css["height"]);
 		}
+		function toggleBGM(cb) {
+			if(get("bgm").paused && cb.checked && gameTime>0) {
+				get("bgm").play();
+			} else {
+				get("bgm").pause();
+			} 
+		}
 		function mykey(k) {
-			gets(".word").filter(function(o) { 
+			var match=gets(".word").filter(function(o) { 
 				return k.value.trim()==o.innerHTML;
-			}).forEach(function(o) {
-				get("score").innerHTML=(++gameScore);
-				o.innerHTML=o.word.tc;
-				o.style.background="transparent";
-				setTimeout(remove,3000,o);
 			});
+			if(match.length<=0) {
+				if(get("cbSFX").checked) get("sfx_x").play();
+			} else {
+				if(get("cbSFX").checked) get("sfx_o").play();
+				match.forEach(function(o) {
+					get("score").innerHTML=(++gameScore);
+					o.innerHTML=o.word.tc;
+					o.style.background="transparent";
+					setTimeout(remove,3000,o);
+				});
+			}
 			k.value="";
 		}
 		function remove(x) {
@@ -126,6 +156,7 @@
 			get("time").innerHTML=t;
 			get("input").focus();
 			$("#timeBtns").hide();
+			if(get("cbBGM").checked) get("bgm").play();
 			if(t>0) {
 				setTimeout(clearInterval,1000*t,setInterval(createWord,2000));
 				setTimeout(clearInterval,1000*t,setInterval(()=>{
@@ -140,8 +171,10 @@
 			}
 		}
 		function gameStop() {
+			if(get("cbBGM").checked) get("bgm").pause();
 			gets(".word").forEach(function(o){remove(o);});
-			alert("恭喜你得了"+gameScore+"分！");
+			get("msg").innerHTML=`恭喜你得了 ${gameScore} 分！`;
+			$(".toast").toast("show");
 			$("#timeBtns").show();
 			//TODO: RANK BOARD
 		}
@@ -164,8 +197,22 @@
 				}).catch(error => {
 					console.error('Error loading the JSON file:', error);
 				});
+		}
+		function init() {
+			loadWords();
+			get('volBGM').value=0.5;
+			get('bgm').volume=get('volBGM').value;
+			$("#input").on('blur',function() {
+				$('.modal').hasClass('show') || get("input").focus();
+			});
+			$(".modal").on('hidden.bs.modal', function() {
+				get("input").focus();
+			});
 			$('#modalSettings').modal('show');
 		}
 	</script>
+	<audio id="bgm" loop><source src="bgm.mp3" type="audio/mpeg"></audio>
+	<audio id="sfx_o"><source src="sfx_o.mp3" type="audio/mpeg"></audio>
+	<audio id="sfx_x"><source src="sfx_x.mp3" type="audio/mpeg"></audio>
 </body>
 </html>
