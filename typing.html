@@ -150,6 +150,11 @@
 				setTimeout(remove,3000,o);
 			});
 			if(get("cbSFX").checked) get(match?"sfx_o":"sfx_x").play();
+			if(gameScore == wordCount && wordSpeed > 500) {
+				wordSpeed-=100;
+				clearInterval(wordTimer);
+				wordTimer=setInterval(createWord,wordSpeed);
+			}
 			k.value="";
 		}
 		function remove(x) {
@@ -160,7 +165,11 @@
 			o.y++;
 			o.style.left=o.x+"px";
 			o.style.top=o.y+"px";
-			if(o.y+o.h >= _bh) remove(o);
+			if(o.y+o.h >= _bh) {
+				word.unshift(o.word);
+				wordCount--;
+				remove(o);
+			}
 		}
 		function createWord() {
 			var x = document.createElement("div");
@@ -209,7 +218,8 @@
 					get("time").innerHTML=(++gameTime);
 				},1000);
 			}
-			wordTimer=setInterval(createWord,2000);
+			wordSpeed=2000;
+			wordTimer=setInterval(createWord,wordSpeed);
 		}
 		function gameStop() {
 			clearInterval(wordTimer);
