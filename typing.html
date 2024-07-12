@@ -45,7 +45,7 @@
 			</div>
 		</div></div>
 		<div class="toast-container d-flex justify-content-center vh-100 vw-100">
-			<div class="toast align-self-center" data-bs-autohide="false">
+			<div class="toast text-bg-info align-self-center">
 				<div class="d-flex">
 					<div class="toast-body fs-4" id="msg"></div>
 					<button type="button" class="btn-close me-2 m-auto" data-bs-dismiss="toast"></button>
@@ -255,6 +255,7 @@
 			gameLv=0;
 		}
 		function gameInit() {
+			gameLv=gameTime=gameScore=0;
 			loadWords();
 			get('volBGM').value=0.5;
 			get('bgm').volume=get('volBGM').value;
@@ -284,6 +285,7 @@
 						var y=document.createElement("li");
 						var z=Number(x.score/(x.time/60)).toFixed(1);
 						y.innerHTML=`${z} WPM, ${x.score} in ${x.time} seconds.`;
+						if(x.score==gameScore && x.time==gameTime && lv==gameLv) y.className="text-danger";
 						o.appendChild(y);
 					};
 					t.appendChild(o);
