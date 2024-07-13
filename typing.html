@@ -175,9 +175,9 @@
 			o.y++;
 			o.style.left=o.x+"px";
 			o.style.top=o.y+"px";
-			if(o.y+o.h >= _bh) {
+			if(o.y+o.h > _bh-5) {
 				word.unshift(o.word);
-				wordCount--;
+				get("countTotal").innerHTML=`${--wordCount}/${wordTotal}`;
 				remove(o);
 			}
 		}
@@ -188,7 +188,7 @@
 			x.innerHTML=x.word.en;
 			x.w=x.innerHTML.length * 9 + 20;
 			x.h=26;
-			x.x=getRndCols() * 200 + getRnd(0, _rem) - x.w ;
+			x.x=getRndCols() * 200 + getRnd(x.w, _rem) - x.w;
 			x.y=0;
 			x.style.left=x.x+"px";
 			x.style.top=x.y+"px";
@@ -229,7 +229,10 @@
 				$("#btnStop").show();
 				$("#wordCount").show();
 				gameTimer=setInterval(()=>{
-					get("time").innerHTML=(++gameTime);
+					gameTime++;
+					timeStr=gameTime;
+					if(gameTime>60) timeStr=`${Math.floor(gameTime/60)}m ${gameTime%60}`;
+					get("time").innerHTML=timeStr;
 				},1000);
 			}
 			wordTimer=setInterval(createWord,wordSpeed);
