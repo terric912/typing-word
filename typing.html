@@ -54,7 +54,7 @@
 		</div>
 	</div>
 
-	<div id="modalSettings" class="modal" tabindex="-1">
+	<div id="modalSettings" class="modal" tabindex="-1" data-bs-backdrop="static">
 		<div class="modal-dialog modal-dialog-centered">
 			<div class="modal-content">
 				<div class="modal-header"><h5 class="modal-title fw-bold">設定</h5></div>
@@ -192,7 +192,9 @@
 		}
 		function gameStart(t) {
 			if(gameLv==0) {
-				alert("請先進行遊戲設定！");return;
+				alert("請先選擇題庫！");
+				$('#modalSettings').modal('show');
+				return;
 			}
 			wordCount=0;
 			gameScore=0;
