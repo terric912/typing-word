@@ -111,6 +111,14 @@
 		function get(id) { return document.getElementById(id); }
 		function gets(qs) { return Array.from(document.querySelectorAll(qs)); }
 		function getRnd(min,max) { return Math.floor(Math.random()*(max-min+1))+min; }
+		function getRndCols() {
+			var col=_cols.pop();
+			if(_cols.length==0) {
+				for(var i=0;i<Math.ceil(_bw/200);i++) (i != col) && _cols.push(i);
+				_cols.sort(()=>{return Math.random()-0.5;})
+			}
+			return col;
+		}
 		function boardResize() {
 			if(window.innerWidth < 768) {
 				get("board").style.flexGrow="0.4";
@@ -120,6 +128,8 @@
 			var _css=getComputedStyle(get("board"));
 			_bw=parseFloat(_css["width"]);
 			_bh=parseFloat(_css["height"]);
+			_rem=_bw % 200;
+			_cols=[getRnd(0,Math.floor(_bw/200))];
 		}
 		function toggleBGM(cb) {
 			if(get("bgm").paused && cb.checked && gameTime>0) {
@@ -178,11 +188,11 @@
 			x.innerHTML=x.word.en;
 			x.w=x.innerHTML.length * 9 + 20;
 			x.h=26;
-			x.x=getRnd(0, _bw - x.w);
+			x.x=getRndCols() * 200 + getRnd(0, _rem) - x.w ;
 			x.y=0;
 			x.style.left=x.x+"px";
 			x.style.top=x.y+"px";
-			x.tmr=setInterval(falling,100,x);
+			x.tmr=setInterval(falling, wordSpeed/x.h, x);
 			get("board").append(x);
 			get("countTotal").innerHTML=`${++wordCount}/${wordTotal}`;
 			if($("#wordCount").is(":visible") && (wordTotal==wordCount)) {
@@ -206,6 +216,7 @@
 			if(get("cbBGM").checked) get("bgm").play();
 			if(t>0) {
 				changeWords();
+				wordSpeed=1000;
 				$("#wordCount").hide();
 				timeCount=t;
 				gameTimer=setInterval(()=>{
@@ -214,13 +225,13 @@
 				},1000);
 			} else {
 				changeWords(0,6);
+				wordSpeed=2000;
 				$("#btnStop").show();
 				$("#wordCount").show();
 				gameTimer=setInterval(()=>{
 					get("time").innerHTML=(++gameTime);
 				},1000);
 			}
-			wordSpeed=2000;
 			wordTimer=setInterval(createWord,wordSpeed);
 		}
 		function gameStop() {
