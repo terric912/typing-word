@@ -36,6 +36,7 @@
 			<div class="d-inline-flex float-end">
 				<button class="btn btn-sm btn-warning mx-1" data-bs-toggle="modal" data-bs-target="#modalSettings"><i class="bi bi-gear"></i></button>
 				<button class="btn btn-sm btn-success mx-1" data-bs-toggle="modal" data-bs-target="#modalRanks"><i class="bi bi-bar-chart"></i></button>
+				<button class="btn btn-sm btn-secondary mx-1" data-bs-toggle="modal" data-bs-target="#modalInfo"><i class="bi bi-info-circle"></i></button>
 			</div>
 		</div>
 		<div class="card-body bg-primary-subtle" id="board"></div>
@@ -99,6 +100,21 @@
 				<dl class="modal-body" id="rankboard"></dl>
 				<div class="modal-footer justify-content-between">
 					<button class="btn btn-sm btn-outline-danger" data-bs-dismiss="modal" onclick="clearRank();">清除排行榜</button>
+					<button class="btn btn-sm btn-outline-secondary" data-bs-dismiss="modal">關閉</button>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<div id="modalInfo" class="modal" tabindex="-1">
+		<div class="modal-dialog modal-dialog-centered">
+			<div class="modal-content">
+				<div class="modal-header"><h5 class="modal-title fw-bold">關於</h5></div>
+				<div class="modal-body">
+					<p>作者：陳政忠 &lt;terric&#64;gmail.com&gt;<br>若有建議或回饋，歡迎填寫<a target="_blank" href="https://forms.gle/YXkAM6tjYtXDVajK9">表單</a>。</p>
+					<p>BGM and SFX from <a target="_blank" href="https://dova-s.jp/">DOVA-SYNDROME</a><br>單字來自網路、<a target="_blank" href="https://www.ceec.edu.tw/">大學考試中心</a>及<a target="_blank" href="http://www.taiwantestcentral.com/">台灣測驗中心</a></p>
+				</div>
+				<div class="modal-footer">
 					<button class="btn btn-sm btn-outline-secondary" data-bs-dismiss="modal">關閉</button>
 				</div>
 			</div>
