@@ -7,8 +7,8 @@ case "login": /* var user={"email":"..@...", "email_verified":true, "name":"", "
 	if(!$data["email_verified"]) $ret=["msg"=>"Login failed!","code"=>1];
 	$res=$myDB->doQuery("SELECT * FROM account WHERE uid=?",[explode("@",$data["email"])[0]],true);
 	if(!$res) {
-		$myDB->doQuery("INSERT INTO account (`uid`,`name`) VALUES (?,?)",[explode("@",$data["email"])[0],$data["name"]]);
-		$ret=["msg"=>"首次登入！","code"=>1];
+		$myDB->doQuery("INSERT INTO account (`uid`,`name`,`auth`) VALUES (?,?,1)",[explode("@",$data["email"])[0],$data["name"]]);
+		$ret=["msg"=>"首次登入！","code"=>0];
 	} else {
 		$user=$ret;
 		$user["email"]=$data["email"];
