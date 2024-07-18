@@ -43,7 +43,35 @@ require_once("utils.php");
 <?php } ?>
 			</div>
 		</div>
-		<div class="card-body bg-secondary-subtle"></div>
+		<div class="card-body bg-secondary-subtle">
+			<h5>排行榜</h5>
+			<div class="d-flex">
+				<ul class="nav nav-tabs flex-column">
+<?php
+	$Lv=["j1"=>"國中基本單字","j2"=>"國中進階單字","s0"=>"高中不分級","s1"=>"高中第一級","s2"=>"高中第二級","s3"=>"高中第三級","s4"=>"高中第四級","s5"=>"高中第五級","s6"=>"高中第六級"];
+	foreach($Lv as $k=>$v) {
+		printf("%s<li class='nav-item'><button class='nav-link' id='tab-%s' data-bs-toggle='tab' data-bs-target='#pane-%s'>%s</button></li>\n",indent(5),$k,$k,$v);
+	}
+	printf("%s<li class='nav-item'><button class='nav-link' id='tab-self' data-bs-toggle='tab' data-bs-target='#pane-self'>我的記錄</button></li>\n",indent(5));
+	printf("%s</ul>\n%s<div class='tab-content p-2'>\n",indent(4),indent(4));
+	foreach($Lv as $k=>$v) {
+		printf("%s<div class='tab-pane fade' id='pane-%s' tabindex='0'><ol>",indent(5),$k);
+		$sql=sprintf("SELECT `uid`,`score`,`times`,ROUND(score/(times * 60),2) as `WPM` FROM `rank` WHERE `LV`=? ORDER BY `WPM` DESC, `times` DESC, `uid` ASC LIMIT 10");
+		foreach($myDB->doQuery($sql,[$k]) as $d) {
+			printf("<li>%s@ %5.2f WPM, %2d words in %3d seconds.</li>",$d['uid'],$d['WPM'],$d['score'],$d['times']);
+		}
+		printf("</ol></div>\n");
+	}
+	printf("%s<div class='tab-pane fade' id='pane-self' tabindex='0'><ul>",indent(5));
+	$sql=sprintf("SELECT `LV`,`score`,`times`,ROUND(score/(times * 60),2) as WPM FROM `rank` WHERE `uid`=? ORDER BY `LV` ASC, WPM DESC, `times` DESC LIMIT 20");
+	foreach($myDB->doQuery($sql,[getSession("user","uid")]) as $d) {
+		printf("<li>%s: %5.2f WPM, %2d words in %3d seconds.</li>",$Lv[$d['LV']],$d['WPM'],$d['score'],$d['times']);
+	}
+	printf("</ul></div>\n");
+?>
+				</div>
+			</div>
+		</div>
 	</div>
 
 	<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
