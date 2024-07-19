@@ -38,6 +38,16 @@ case "addRecord":
 	$opt[3]=intval($opt[3]);
 	$myDB->doQuery("INSERT INTO `records` (`uid`,`Lv`,`score`,`times`) VALUES (?,?,?,?)",$opt);
 	break;
+case "saveOpts": 
+	$keys=["last_gameLv","last_gameTime","bgm_enabled","sfx_enabled","bgm_volume"];
+	foreach(array_combine($keys,$_POST["data"]) as $k=>$v) {
+		if(0==$myDB->getCount("SELECT v FROM options WHERE k=?",[$k])) {
+			$myDB->doQuery("INSERT INTO options (k,v) VALUES (?,?)",[$k,$v]);
+		} else {
+			$myDB->doQuery("UPDATE options SET v=? WHERE k=?",[$v,$k]);
+		}
+	}
+	break;	
 default: exit;
 }
 ?>
