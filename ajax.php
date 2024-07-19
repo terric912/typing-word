@@ -10,7 +10,7 @@ case "login": /* var user={"email":"..@...", "email_verified":true, "name":"", "
 		$myDB->doQuery("INSERT INTO account (`uid`,`name`,`auth`) VALUES (?,?,1)",[explode("@",$data["email"])[0],$data["name"]]);
 		$ret=["msg"=>"首次登入！","code"=>0];
 	} else {
-		$user=$ret;
+		$user=$res;
 		$user["email"]=$data["email"];
 		$user["pic"]=$data["picture"];
 		setSession("user",$user);
