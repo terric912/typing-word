@@ -32,6 +32,12 @@ case "logout":
 	session_destroy();
 	unset($myDB);
 	die($email);
+case "addRecord":
+	$opt=$_POST["data"];
+	$opt[2]=intval($opt[2]);
+	$opt[3]=intval($opt[3]);
+	$myDB->doQuery("INSERT INTO `records` (`uid`,`Lv`,`score`,`times`) VALUES (?,?,?,?)",$opt);
+	break;
 default: exit;
 }
 ?>

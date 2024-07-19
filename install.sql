@@ -13,7 +13,7 @@ CREATE TABLE `options` (
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-CREATE TABLE `rank` (
+CREATE TABLE `records` (
   `uid` varchar(32) COLLATE utf8mb4_unicode_ci NOT NULL,
   `LV` varchar(8) COLLATE utf8mb4_unicode_ci NOT NULL,
   `score` int NOT NULL DEFAULT '0',

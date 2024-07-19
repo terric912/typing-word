@@ -52,22 +52,15 @@ require_once("utils.php");
 	foreach($Lv as $k=>$v) {
 		printf("%s<li class='nav-item'><button class='nav-link' id='tab-%s' data-bs-toggle='tab' data-bs-target='#pane-%s'>%s</button></li>\n",indent(5),$k,$k,$v);
 	}
-	printf("%s<li class='nav-item'><button class='nav-link' id='tab-self' data-bs-toggle='tab' data-bs-target='#pane-self'>我的記錄</button></li>\n",indent(5));
 	printf("%s</ul>\n%s<div class='tab-content p-2'>\n",indent(4),indent(4));
 	foreach($Lv as $k=>$v) {
 		printf("%s<div class='tab-pane fade' id='pane-%s' tabindex='0'><ol>",indent(5),$k);
-		$sql=sprintf("SELECT `uid`,`score`,`times`,ROUND(score/(times * 60),2) as `WPM` FROM `rank` WHERE `LV`=? ORDER BY `WPM` DESC, `times` DESC, `uid` ASC LIMIT 10");
+		$sql=sprintf("SELECT `uid`,`score`,`times`,ROUND(score/(times / 60),2) as `WPM` FROM `records` WHERE `LV`=? ORDER BY `WPM` DESC, `times` DESC, `uid` ASC LIMIT 10");
 		foreach($myDB->doQuery($sql,[$k]) as $d) {
 			printf("<li>%s@ %5.2f WPM, %2d words in %3d seconds.</li>",$d['uid'],$d['WPM'],$d['score'],$d['times']);
 		}
 		printf("</ol></div>\n");
 	}
-	printf("%s<div class='tab-pane fade' id='pane-self' tabindex='0'><ul>",indent(5));
-	$sql=sprintf("SELECT `LV`,`score`,`times`,ROUND(score/(times * 60),2) as WPM FROM `rank` WHERE `uid`=? ORDER BY `LV` ASC, WPM DESC, `times` DESC LIMIT 20");
-	foreach($myDB->doQuery($sql,[getSession("user","uid")]) as $d) {
-		printf("<li>%s: %5.2f WPM, %2d words in %3d seconds.</li>",$Lv[$d['LV']],$d['WPM'],$d['score'],$d['times']);
-	}
-	printf("</ul></div>\n");
 ?>
 				</div>
 			</div>
@@ -78,6 +71,17 @@ require_once("utils.php");
 	<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 	<script src="https://accounts.google.com/gsi/client"></script>
 	<script>
+		function addRecord() {
+<?php if(isLogined()) { ?>
+			$.ajax({url:"ajax.php",type:"POST", cache:false,
+				data:{cmd:"addRecord",data:["<?php echo getSession("user","uid");?>",$("#optLv").val(),gameScore,gameTime-timeCount]},
+				success: function(data) {
+					location.reload();
+				}
+			});
+<?php }?>
+			return;
+		}
 	    function parseJwt(token,parsed) {
 			var base64Url=token.split('.')[1];
 			var base64=base64Url.replace(/-/g,'+').replace(/_/g,'/');
