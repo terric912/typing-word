@@ -19,10 +19,6 @@ $options=array_column($myDB->doQuery("SELECT k,v FROM options"),'v','k');
 		body {
 			font-family: Consolas, Verdana, Arial, sans-serif;
 		}
-		.loginIcon {
-			width: 32px;
-			border-radius:4px;
-		}
 		#board {
 			position: relative;
 		}
@@ -33,7 +29,11 @@ $options=array_column($myDB->doQuery("SELECT k,v FROM options"),'v','k');
 		}
 		mark {
 			background: transparent;
-			color:yellow;
+			color: yellow;
+		}
+		.loginIcon {
+			width: 32px;
+			border-radius: 4px;
 		}
 	</style>
 </head>
@@ -99,17 +99,15 @@ $options=array_column($myDB->doQuery("SELECT k,v FROM options"),'v','k');
 					<div class="col-sm-9"><select class="form-select mb-2" id="optLv" onchange="gameLv=this.value;">
 <?php					foreach($Lv as $v) {
 							$selected=(@$options["last_gameLv"]==$v['code']);
-							printf("%s<option value='%s'%s>%s(%d)</option>\n",indent(6),$v['code'],($selected?" selected":""),$v['title'],$v['count']); 
-						} 
-?>
+							printf("%s<option value='%s'%s>%s(%d)</option>\n",indent(6),$v['code'],($selected?" selected":""),$v['title'],$v['count']);
+						} ?>
 					</select></div>
 					<label class="col-sm-3 col-form-label">打字時間：</label>
 					<div class="col-sm-9"><select class="form-select mb-2" id="optTm" onchange="gameTime=this.value;">
 <?php					foreach([0,1,3,5,10] as $m) {
 							$selected=(@$options["last_gameTime"]==$m*60);
-							printf("%s<option value='%d'%s>%s</option>\n",indent(6),$m*60,($selected?" selected":""),$m?sprintf("%2d分鐘",$m):"不限時"); 
-						}
-?>
+							printf("%s<option value='%d'%s>%s</option>\n",indent(6),$m*60,($selected?" selected":""),$m?sprintf("%2d分鐘",$m):"不限時");
+						} ?>
 					</select></div>
 					</div>
 					<div class="form-check form-switch form-check-inline">
@@ -149,8 +147,9 @@ $options=array_column($myDB->doQuery("SELECT k,v FROM options"),'v','k');
 				</div>
 			</div>
 		</div>
-		
+
 	</div>
+
 	<audio id="bgm" loop><source src="bgm.mp3" type="audio/mpeg"></audio>
 	<audio id="sfx_o"><source src="sfx_o.mp3" type="audio/mpeg"></audio>
 	<audio id="sfx_x"><source src="sfx_x.mp3" type="audio/mpeg"></audio>
@@ -158,94 +157,8 @@ $options=array_column($myDB->doQuery("SELECT k,v FROM options"),'v','k');
 	<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
 	<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 	<script src="https://accounts.google.com/gsi/client"></script>
+	<script src="typing.js"></script>
 	<script>
-		function get(id) { return document.getElementById(id); }
-		function gets(qs) { return Array.from(document.querySelectorAll(qs)); }
-		function getRnd(min,max) { return Math.floor(Math.random()*(max-min+1))+min; }
-		function getRndCols() {
-			var col=_cols.pop();
-			if(_cols.length==0) {
-				for(var i=0;i<Math.ceil(_bw/200);i++) (i != col) && _cols.push(i);
-				_cols.sort(()=>{return Math.random()-0.5;})
-			}
-			return col;
-		}
-		function boardResize() {
-			if(window.innerWidth < 768) {
-				get("board").style.flexGrow="0.4";
-			} else {
-				get("board").style.flexGrow="";
-			}
-			var _css=getComputedStyle(get("board"));
-			_bw=parseFloat(_css["width"]);
-			_bh=parseFloat(_css["height"]);
-			_rem=_bw % 200-10;
-			_cols=[getRnd(0,Math.floor(_bw/200))];
-		}
-		function mykeyUp(k) {
-			if(event.key === 'Enter') return;
-			gets("mark").forEach(function(o){o.outerHTML=o.innerHTML;});
-			gets(".word").filter(function(o) {
-				return this.length && o.innerText.startsWith(this);
-			}, k.value).forEach(function(o) {
-				o.innerHTML=`<mark>${this}</mark>`+o.word.en.substr(this.length);
-			}, k.value);
-		}
-		function mykeyDown(k) {
-			if(event.key !== 'Enter') return;
-			var match=false;
-			gets(".word").filter(function(o) { 
-				return this.trim()==o.innerText;
-			}, k.value).forEach(function(o) {
-				match=true;
-				get("score").innerHTML=(++gameScore);
-				o.innerHTML=o.word.tc;
-				o.style.background="transparent";
-				setTimeout(remove,3000,o);
-			});
-			if(get("cbSFX").checked) get(match?"sfx_o":"sfx_x").play();
-			if(gameScore == wordCount && wordSpeed > 500) {
-				wordSpeed-=100;
-				clearInterval(wordTimer);
-				wordTimer=setInterval(createWord,wordSpeed);
-			}
-			k.value="";
-		}
-		function remove(x) {
-			clearInterval(x.tmr);
-			x.remove();
-		}
-		function falling(o) {
-			o.y++;
-			o.style.left=o.x+"px";
-			o.style.top=o.y+"px";
-			if(o.y+o.h > _bh-5) {
-				word.unshift(o.word);
-				get("countTotal").innerHTML=`${--wordCount}/${wordTotal}`;
-				remove(o);
-			}
-		}
-		function createWord() {
-			var x = document.createElement("div");
-			x.className="word";
-			x.word=word.pop();
-			x.innerHTML=x.word.en;
-			x.w=x.innerHTML.length * 9 + 20;
-			x.h=26;
-			x.x=getRndCols() * 200 + getRnd(x.w, _rem) - x.w;
-			if(x.x < 5) x.x = 5;
-			if(x.x + x.w > _bw) x.x = _bw - x.w - 10;
-			x.y=0;
-			x.style.left=x.x+"px";
-			x.style.top=x.y+"px";
-			x.tmr=setInterval(falling, wordSpeed/x.h, x);
-			get("board").append(x);
-			get("countTotal").innerHTML=`${++wordCount}/${wordTotal}`;
-			if($("#wordCount").is(":visible") && (wordTotal==wordCount)) {
-				(w.innerHTML.length>12)?changeWords(0,0):(w.innerHTML.length<7)?changeWords(7,12):changeWords(13,18);
-				wordCount=0;
-			}
-		}
 		function gameStart() {
 			$('#modalTyping').modal('show');
 			wordCount=0;
@@ -297,34 +210,6 @@ $options=array_column($myDB->doQuery("SELECT k,v FROM options"),'v','k');
 			$("#wordCount").hide();
 			$("#modalTyping").on('shown.bs.modal',boardResize);
 		}
-		function changeWords(m=0,n=0) {
-			window.word=Array.from(window.words).filter(function(x) {
-				var ret=(x.Lv==gameLv);
-				if(m>0) ret&&=(x.en.length >= m);
-				if(n>0) ret&&=(x.en.length <= n);
-				return  ret;
-			});
-			window.word.sort(()=>{return 0.5-Math.random();});
-			wordTotal=window.word.length;
-			get("countTotal").innerHTML=`${wordCount}/${wordTotal}`;
-		}
-		function loadWords() {
-			fetch("words.json").then(response => response.json())
-				.then(data => {
-					window.words = data.map(item => {
-						return {en:item.en,Lv:item.Lv,tc:item.tc};
-					});
-				}).catch(error => {
-					console.error('Error loading the JSON file:', error);
-				});
-		}
-		function toggleBGM(cb) {
-			if(get("bgm").paused && cb.checked && gameTime>0) {
-				get("bgm").play();
-			} else {
-				get("bgm").pause();
-			} 
-		}
 		function saveSettings() {
 			gameLv=$("#optLv").val();
 			gameTime=$("#optTm").val();
@@ -343,7 +228,7 @@ $options=array_column($myDB->doQuery("SELECT k,v FROM options"),'v','k');
 					location.reload();
 				}
 			});
-<?php }?>
+<?php } ?>
 			return;
 		}
 	    function parseJwt(token,parsed) {
