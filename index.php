@@ -47,7 +47,6 @@ $options=array_column($myDB->doQuery("SELECT k,v FROM options"),'v','k');
 				<span class="ms-auto" data-bs-toggle="dropdown"><img class="loginIcon" src="<?php echo getSession("user","pic");?>"></span>
 				<div class="dropdown">
 					<ul class="dropdown-menu">
-						<li><a class="dropdown-item" onclick=";">我的記錄</a></li>
 						<li><a class="dropdown-item" onclick="signOut();">登出</a></li>
 					</ul>
 				</div>
@@ -63,10 +62,22 @@ $options=array_column($myDB->doQuery("SELECT k,v FROM options"),'v','k');
 				<ul class="nav nav-tabs flex-column">
 <?php
 	$Lv=json_decode('[{"code":"j1","title":"國中基本單字","count":1229},{"code":"j2","title":"國中進階單字","count":779},{"code":"s0","title":"高中不分級","count":135},{"code":"s1","title":"高中第一級","count":1047},{"code":"s2","title":"高中第二級","count":1039},{"code":"s3","title":"高中第三級","count":1018},{"code":"s4","title":"高中第四級","count":1022},{"code":"s5","title":"高中第五級","count":1006},{"code":"s6","title":"高中第六級","count":1030}]',true);
+	$LvTitle=array_column($Lv,"title","code");
+	if(isLogined()) {
+		printf("%s<li class='nav-item'><button class='nav-link active' id='tab-self' data-bs-toggle='tab' data-bs-target='#pane-self'>我的個人記錄</button></li>\n",indent(5));
+	}
 	foreach($Lv as $v) {
 		printf("%s<li class='nav-item'><button class='nav-link' id='tab-%s' data-bs-toggle='tab' data-bs-target='#pane-%s'>%s</button></li>\n",indent(5),$v['code'],$v['code'],$v['title']);
 	}
 	printf("%s</ul>\n%s<div class='tab-content p-2'>\n",indent(4),indent(4));
+	if(isLogined()) {
+		printf("%s<div class='tab-pane active' id='pane-self' tabindex='0'><ul>",indent(5));
+		$sql=sprintf("SELECT `LV`,`score`,`times`,ROUND(score/(times / 60),2) as `WPM` FROM `records` WHERE `uid`=? ORDER BY `LV` ASC, `WPM` DESC, `times` DESC LIMIT 20");
+		foreach($myDB->doQuery($sql,[getSession("user","uid")]) as $d) {
+			printf("<li><span class='fw-bold'>[%s]</span> %5.2f WPM, %3d 秒內完成 %2d 個單字.</li>",$LvTitle[$d['LV']],$d['WPM'],$d['times'],$d['score']);
+		}
+		printf("</ul></div>\n");
+	}
 	foreach($Lv as $v) {
 		printf("%s<div class='tab-pane fade' id='pane-%s' tabindex='0'><ol>",indent(5),$v['code']);
 		$sql=sprintf("SELECT `uid`,`score`,`times`,ROUND(score/(times / 60),2) as `WPM` FROM `records` WHERE `LV`=? ORDER BY `WPM` DESC, `times` DESC, `uid` ASC LIMIT 10");
