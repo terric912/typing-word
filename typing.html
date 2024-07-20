@@ -8,8 +8,6 @@
 	<link href="favicon.ico" rel="icon">
 	<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
 	<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
-	<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
-	<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 	<style>
 		body {
 			font-family: Consolas, Verdana, Arial, sans-serif;
@@ -21,11 +19,10 @@
 			position: absolute;
 			background-color: salmon;
 			padding: 0px 10px;
-			margin: 5px;
 		}
 		mark {
 			background: transparent;
-			color:yellow;
+			color: yellow;
 		}
 	</style>
 </head>
@@ -127,118 +124,30 @@
 	<audio id="bgm" loop><source src="bgm.mp3" type="audio/mpeg"></audio>
 	<audio id="sfx_o"><source src="sfx_o.mp3" type="audio/mpeg"></audio>
 	<audio id="sfx_x"><source src="sfx_x.mp3" type="audio/mpeg"></audio>
+
+	<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+	<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+	<script src="typing.js"></script>
 	<script>
-		function get(id) { return document.getElementById(id); }
-		function gets(qs) { return Array.from(document.querySelectorAll(qs)); }
-		function getRnd(min,max) { return Math.floor(Math.random()*(max-min+1))+min; }
-		function getRndCols() {
-			var col=_cols.pop();
-			if(_cols.length==0) {
-				for(var i=0;i<Math.ceil(_bw/200);i++) (i != col) && _cols.push(i);
-				_cols.sort(()=>{return Math.random()-0.5;})
-			}
-			return col;
-		}
-		function boardResize() {
-			if(window.innerWidth < 768) {
-				get("board").style.flexGrow="0.4";
-			} else {
-				get("board").style.flexGrow="";
-			}
-			var _css=getComputedStyle(get("board"));
-			_bw=parseFloat(_css["width"]);
-			_bh=parseFloat(_css["height"]);
-			_rem=_bw % 200;
-			_cols=[getRnd(0,Math.floor(_bw/200))];
-		}
-		function toggleBGM(cb) {
-			if(get("bgm").paused && cb.checked && gameTime>0) {
-				get("bgm").play();
-			} else {
-				get("bgm").pause();
-			} 
-		}
-		function mykeyUp(k) {
-			if(event.key === 'Enter') return;
-			gets("mark").forEach(function(o){o.outerHTML=o.innerHTML;});
-			gets(".word").filter(function(o) {
-				return this.length && o.innerText.startsWith(this);
-			}, k.value).forEach(function(o) {
-				o.innerHTML=`<mark>${this}</mark>`+o.word.en.substr(this.length);
-			}, k.value);
-		}
-		function mykeyDown(k) {
-			if(event.key !== 'Enter') return;
-			var match=false;
-			gets(".word").filter(function(o) { 
-				return this.trim()==o.innerText;
-			}, k.value).forEach(function(o) {
-				match=true;
-				get("score").innerHTML=(++gameScore);
-				o.innerHTML=o.word.tc;
-				o.style.background="transparent";
-				setTimeout(remove,3000,o);
-			});
-			if(get("cbSFX").checked) get(match?"sfx_o":"sfx_x").play();
-			if(gameScore == wordCount && wordSpeed > 500) {
-				wordSpeed-=100;
-				clearInterval(wordTimer);
-				wordTimer=setInterval(createWord,wordSpeed);
-			}
-			k.value="";
-		}
-		function remove(x) {
-			clearInterval(x.tmr);
-			x.remove();
-		}
-		function falling(o) {
-			o.y++;
-			o.style.left=o.x+"px";
-			o.style.top=o.y+"px";
-			if(o.y+o.h > _bh-5) {
-				word.unshift(o.word);
-				get("countTotal").innerHTML=`${--wordCount}/${wordTotal}`;
-				remove(o);
-			}
-		}
-		function createWord() {
-			var x = document.createElement("div");
-			x.className="word";
-			x.word=word.pop();
-			x.innerHTML=x.word.en;
-			x.w=x.innerHTML.length * 9 + 20;
-			x.h=26;
-			x.x=getRndCols() * 200 + getRnd(x.w, _rem) - x.w;
-			x.y=0;
-			x.style.left=x.x+"px";
-			x.style.top=x.y+"px";
-			x.tmr=setInterval(falling, wordSpeed/x.h, x);
-			get("board").append(x);
-			get("countTotal").innerHTML=`${++wordCount}/${wordTotal}`;
-			if($("#wordCount").is(":visible") && (wordTotal==wordCount)) {
-				(w.innerHTML.length>12)?changeWords(0,0):(w.innerHTML.length<7)?changeWords(7,12):changeWords(13,18);
-				wordCount=0;
-			}
-		}
 		function gameStart(t) {
 			if(gameLv==0) {
 				alert("請先選擇題庫！");
 				$('#modalSettings').modal('show');
 				return;
 			}
+			gameTime=t;
 			wordCount=0;
 			gameScore=0;
-			gameTime=t;
 			get("score").innerHTML=0;
-			get("time").innerHTML=t;
+			get("time").innerHTML=gameTime;
 			get("input").focus();
+			$("#wordCount").toggle(gameTime==0);
 			$("#timeBtns").hide();
 			if(get("cbBGM").checked) get("bgm").play();
-			if(t>0) {
+			if(gameTime>0) {
 				changeWords();
 				wordSpeed=1000;
-				$("#wordCount").hide();
-				timeCount=t;
+				timeCount=gameTime;
 				gameTimer=setInterval(()=>{
 					get("time").innerHTML=(--timeCount);
 					if(timeCount<=0) gameStop();
@@ -246,8 +155,8 @@
 			} else {
 				changeWords(0,6);
 				wordSpeed=2000;
+				timeCount=0;
 				$("#btnStop").show();
-				$("#wordCount").show();
 				gameTimer=setInterval(()=>{
 					gameTime++;
 					timeStr=gameTime;
@@ -256,8 +165,11 @@
 				},1000);
 			}
 			wordTimer=setInterval(createWord,wordSpeed);
+			gamePlaying=1;
 		}
 		function gameStop() {
+			if(!gamePlaying) return;
+			gamePlaying=0;
 			clearInterval(wordTimer);
 			clearInterval(gameTimer);
 			if(get("cbBGM").checked) get("bgm").pause();
@@ -266,31 +178,10 @@
 			$(".toast").toast("show");
 			$("#timeBtns").show();
 			$("#btnStop").hide();
-			setRank();
-		}
-		function changeWords(m=0,n=0) {
-			window.word=Array.from(window.words).filter(function(x) {
-				var ret=(x.Lv==gameLv);
-				if(m>0) ret&&=(x.en.length >= m);
-				if(n>0) ret&&=(x.en.length <= n);
-				return  ret;
-			});
-			window.word.sort(()=>{return 0.5-Math.random();});
-			wordTotal=window.word.length;
-			get("countTotal").innerHTML=`${wordCount}/${wordTotal}`;
-		}
-		function loadWords() {
-			fetch("words.json").then(response => response.json())
-				.then(data => {
-					window.words = data.map(item => {
-						return {en:item.en,Lv:item.Lv,tc:item.tc};
-					});
-				}).catch(error => {
-					console.error('Error loading the JSON file:', error);
-				});
-			gameLv=0;
+			if(gameScore>0) setRank();
 		}
 		function gameInit() {
+			gamePlaying=0;
 			gameLv=gameTime=gameScore=0;
 			loadWords();
 			get('volBGM').value=0.5;
